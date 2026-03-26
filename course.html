@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Microverse — Interactive Code Course</title>
+<style>
+  /* ─── Design Tokens ─────────────────────────────────── */
+  :root {
+    --bg:       #FAF8F5;
+    --surface:  #FFFFFF;
+    --border:   #E5DDD4;
+    --primary:  #2E5147;
+    --plight:   #4A8565;
+    --accent:   #E07B3E;
+    --alight:   #FFF3DC;
+    --code-bg:  #1C2535;
+    --code-fg:  #CBD5E0;
+    --text:     #2A2724;
+    --muted:    #6B625B;
+    --tag-bg:   #EAF4EF;
+    --tag-fg:   #2E5147;
+    --radius:   12px;
+    --shadow:   0 2px 12px rgba(0,0,0,.08);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    font-size: 17px;
+    line-height: 1.7;
+  }
+
+  /* ─── Progress Bar ───────────────────────────────────── */
+  #progress-bar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+    height: 4px; background: var(--border);
+  }
+  #progress-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    transition: width .2s;
+  }
+
+  /* ─── Nav ────────────────────────────────────────────── */
+  #nav {
+    position: fixed; top: 4px; left: 0; right: 0; z-index: 998;
+    background: rgba(250,248,245,.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 24px;
+    overflow-x: auto;
+  }
+  #nav a {
+    text-decoration: none; color: var(--muted); font-size: 13px;
+    white-space: nowrap; padding: 4px 12px; border-radius: 99px;
+    transition: background .15s, color .15s;
+  }
+  #nav a:hover, #nav a.active {
+    background: var(--primary); color: #fff;
+  }
+  #nav .brand {
+    font-weight: 700; color: var(--primary); font-size: 15px;
+    margin-right: 8px; flex-shrink: 0;
+  }
+
+  /* ─── Layout ─────────────────────────────────────────── */
+  .page { padding-top: 60px; }
+  section {
+    max-width: 900px; margin: 0 auto;
+    padding: 80px 24px 40px;
+  }
+  section:not(:last-child) {
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ─── Hero ───────────────────────────────────────────── */
+  #hero {
+    min-height: calc(100vh - 60px);
+    display: flex; flex-direction: column; justify-content: center;
+    background: linear-gradient(160deg, #EDF7F2 0%, var(--bg) 60%);
+    text-align: center;
+  }
+  #hero h1 {
+    font-size: clamp(2.2rem, 6vw, 4rem);
+    font-weight: 800; color: var(--primary);
+    letter-spacing: -.02em; line-height: 1.1;
+  }
+  #hero .subtitle {
+    font-size: 1.2rem; color: var(--muted);
+    max-width: 600px; margin: 20px auto 0;
+  }
+  #hero .badges {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    justify-content: center; margin-top: 32px;
+  }
+  .badge {
+    background: var(--tag-bg); color: var(--tag-fg);
+    border: 1px solid #C2DDD0; border-radius: 99px;
+    font-size: 13px; font-weight: 600; padding: 6px 14px;
+  }
+  .start-btn {
+    display: inline-block; margin-top: 40px;
+    background: var(--primary); color: #fff;
+    text-decoration: none; padding: 14px 32px;
+    border-radius: 99px; font-weight: 700; font-size: 1rem;
+    transition: background .2s, transform .1s;
+    box-shadow: 0 4px 16px rgba(46,81,71,.25);
+  }
+  .start-btn:hover { background: var(--plight); transform: translateY(-2px); }
+
+  /* ─── Headings ───────────────────────────────────────── */
+  .module-label {
+    font-size: 12px; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--accent);
+    margin-bottom: 8px;
+  }
+  h2 {
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 800; color: var(--primary);
+    letter-spacing: -.02em; line-height: 1.2;
+    margin-bottom: 16px;
+  }
+  h3 {
+    font-size: 1.2rem; font-weight: 700; color: var(--primary);
+    margin: 32px 0 12px;
+  }
+  p { margin-bottom: 16px; }
+  strong { color: var(--primary); }
+  ul, ol { padding-left: 20px; margin-bottom: 16px; }
+  li { margin-bottom: 6px; }
+
+  /* ─── Cards ──────────────────────────────────────────── */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px;
+    box-shadow: var(--shadow);
+  }
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px; margin: 24px 0;
+  }
+  .char-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px 16px;
+    box-shadow: var(--shadow);
+    transition: transform .15s, box-shadow .15s;
+  }
+  .char-card:hover { transform: translateY(-3px); box-shadow: 0 6px 24px rgba(0,0,0,.12); }
+  .char-avatar {
+    width: 48px; height: 48px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; margin-bottom: 12px;
+  }
+  .char-name { font-weight: 700; color: var(--primary); font-size: .95rem; }
+  .char-role { font-size: .82rem; color: var(--accent); font-weight: 600; margin: 2px 0 6px; }
+  .char-desc { font-size: .82rem; color: var(--muted); line-height: 1.5; }
+
+  /* ─── Code Translation ───────────────────────────────── */
+  .code-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    margin: 24px 0;
+  }
+  @media (max-width: 680px) {
+    .code-pair { grid-template-columns: 1fr; }
+  }
+  .code-pane {
+    background: var(--code-bg);
+    padding: 20px;
+    overflow-x: auto;
+  }
+  .code-pane pre {
+    margin: 0; font-family: "Fira Code", "Cascadia Code", "SF Mono", Consolas, monospace;
+    font-size: 13px; line-height: 1.7; color: var(--code-fg);
+    white-space: pre;
+  }
+  .plain-pane {
+    background: var(--alight);
+    padding: 20px;
+    border-left: 1px solid var(--border);
+    font-size: .9rem;
+  }
+  @media (max-width: 680px) {
+    .plain-pane { border-left: none; border-top: 1px solid var(--border); }
+  }
+  .plain-pane h4 {
+    font-size: .85rem; font-weight: 700; color: var(--accent);
+    text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px;
+  }
+  .plain-pane ul { font-size: .9rem; }
+
+  /* ─── Syntax highlighting ────────────────────────────── */
+  .kw  { color: #C792EA; }
+  .fn  { color: #82AAFF; }
+  .str { color: #C3E88D; }
+  .num { color: #F78C6C; }
+  .cmt { color: #546E7A; font-style: italic; }
+  .cls { color: #FFCB6B; }
+  .var { color: #EEFFFF; }
+
+  /* ─── Flow Diagram ───────────────────────────────────── */
+  .flow {
+    display: flex; flex-direction: column; gap: 0;
+    margin: 24px 0;
+  }
+  .flow-step {
+    display: flex; align-items: flex-start; gap: 16px;
+  }
+  .flow-connector {
+    display: flex; flex-direction: column; align-items: center;
+    width: 32px; flex-shrink: 0;
+  }
+  .flow-dot {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--primary); color: #fff;
+    font-weight: 700; font-size: .85rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .flow-line {
+    width: 2px; background: linear-gradient(var(--primary), var(--border));
+    flex: 1; min-height: 24px;
+    margin: 0 auto;
+  }
+  .flow-content {
+    flex: 1; padding-bottom: 24px;
+  }
+  .flow-title { font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+  .flow-desc { font-size: .9rem; color: var(--muted); }
+
+  /* ─── State Machine Diagram ──────────────────────────── */
+  .state-machine {
+    display: flex; align-items: center; justify-content: center;
+    gap: 24px; flex-wrap: wrap;
+    margin: 32px 0; padding: 32px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .state-node {
+    width: 120px; height: 120px; border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-weight: 700; font-size: .95rem; text-align: center;
+    cursor: default;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .state-node:hover { transform: scale(1.05); box-shadow: 0 6px 24px rgba(0,0,0,.15); }
+  .state-node.idle   { background: #E8F5E9; border: 3px solid #4CAF50; color: #2E7D32; }
+  .state-node.moving { background: #FFF8E1; border: 3px solid #FFC107; color: #E65100; }
+  .state-node.talking{ background: #E3F2FD; border: 3px solid #2196F3; color: #0D47A1; }
+  .state-icon { font-size: 2rem; margin-bottom: 6px; }
+  .state-arrow {
+    display: flex; flex-direction: column; align-items: center;
+    font-size: .75rem; color: var(--muted); text-align: center;
+  }
+  .arrow-line {
+    font-size: 1.5rem; color: var(--accent); line-height: 1;
+  }
+
+  /* ─── Architecture Diagram ───────────────────────────── */
+  .arch {
+    background: var(--code-bg); border-radius: var(--radius);
+    padding: 28px 24px; margin: 24px 0;
+    font-family: "Fira Code", monospace; font-size: 13px;
+    line-height: 1.8; color: #CBD5E0;
+    overflow-x: auto;
+  }
+  .arch .node { color: #82AAFF; }
+  .arch .arrow { color: #C792EA; }
+  .arch .label { color: #C3E88D; }
+  .arch .comment { color: #546E7A; }
+
+  /* ─── Memory Visualization ───────────────────────────── */
+  .memory-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px; margin: 24px 0;
+  }
+  .memory-card {
+    border-radius: 10px; padding: 16px 14px;
+    font-size: .85rem;
+  }
+  .mem-personal  { background: #F3E5F5; border: 1px solid #CE93D8; }
+  .mem-interact  { background: #E3F2FD; border: 1px solid #90CAF9; }
+  .mem-task      { background: #FFF8E1; border: 1px solid #FFD54F; }
+  .mem-emotion   { background: #FCE4EC; border: 1px solid #F48FB1; }
+  .mem-event     { background: #E8F5E9; border: 1px solid #A5D6A7; }
+  .mem-type { font-weight: 700; margin-bottom: 4px; }
+  .mem-example { color: #555; font-style: italic; }
+  .importance-row {
+    display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0;
+  }
+  .imp-badge {
+    padding: 6px 14px; border-radius: 99px; font-size: .82rem; font-weight: 700;
+  }
+  .imp-low      { background: #E8F5E9; color: #2E7D32; border: 1px solid #A5D6A7; }
+  .imp-normal   { background: #E3F2FD; color: #1565C0; border: 1px solid #90CAF9; }
+  .imp-high     { background: #FFF8E1; color: #E65100; border: 1px solid #FFD54F; }
+  .imp-critical { background: #FFEBEE; color: #B71C1C; border: 1px solid #EF9A9A; }
+
+  /* ─── API Provider Cards ─────────────────────────────── */
+  .provider-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px; margin: 24px 0;
+  }
+  .provider-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px; text-align: center;
+    font-size: .85rem;
+  }
+  .provider-icon { font-size: 1.8rem; margin-bottom: 8px; }
+  .provider-name { font-weight: 700; color: var(--primary); }
+  .provider-tag  { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+
+  /* ─── Quiz ───────────────────────────────────────────── */
+  .quiz-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; margin: 32px 0; }
+  .quiz-q { font-weight: 700; font-size: 1.05rem; color: var(--primary); margin-bottom: 20px; }
+  .quiz-options { display: flex; flex-direction: column; gap: 10px; }
+  .quiz-opt {
+    background: var(--bg); border: 2px solid var(--border);
+    border-radius: 10px; padding: 14px 18px; cursor: pointer;
+    font-size: .95rem; transition: border-color .15s, background .15s;
+    text-align: left;
+  }
+  .quiz-opt:hover { border-color: var(--primary); background: var(--tag-bg); }
+  .quiz-opt.correct { border-color: #4CAF50; background: #E8F5E9; color: #1B5E20; }
+  .quiz-opt.wrong   { border-color: #F44336; background: #FFEBEE; color: #B71C1C; }
+  .quiz-feedback {
+    margin-top: 16px; padding: 14px 18px; border-radius: 10px;
+    font-size: .95rem; display: none;
+  }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.ok  { background: #E8F5E9; color: #1B5E20; border: 1px solid #A5D6A7; }
+  .quiz-feedback.bad { background: #FFEBEE; color: #B71C1C; border: 1px solid #EF9A9A; }
+  .quiz-next {
+    margin-top: 16px; display: none; background: var(--primary);
+    color: #fff; border: none; border-radius: 99px; padding: 10px 24px;
+    cursor: pointer; font-size: .95rem; font-weight: 600;
+    transition: background .15s;
+  }
+  .quiz-next:hover { background: var(--plight); }
+  .quiz-next.show { display: inline-block; }
+  .quiz-counter { font-size: .85rem; color: var(--muted); margin-bottom: 20px; }
+
+  /* ─── Glossary Tooltips ──────────────────────────────── */
+  .gl {
+    border-bottom: 2px dotted var(--accent);
+    cursor: help; position: relative;
+    color: var(--accent);
+  }
+  .gl::after {
+    content: attr(data-tip);
+    position: absolute; bottom: calc(100% + 8px); left: 50%;
+    transform: translateX(-50%);
+    background: var(--code-bg); color: #EEFFFF;
+    font-size: .8rem; line-height: 1.5;
+    padding: 8px 12px; border-radius: 8px;
+    max-width: 260px;
+    white-space: normal;
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s;
+    z-index: 100;
+    box-shadow: 0 4px 16px rgba(0,0,0,.3);
+  }
+  .gl:hover::after { opacity: 1; }
+
+  /* ─── Callout ────────────────────────────────────────── */
+  .callout {
+    border-left: 4px solid var(--accent);
+    background: var(--alight); border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 16px 20px; margin: 24px 0; font-size: .95rem;
+  }
+  .callout.green {
+    border-left-color: var(--primary); background: var(--tag-bg);
+  }
+  .callout-icon { font-size: 1.2rem; margin-right: 6px; }
+
+  /* ─── Animations ─────────────────────────────────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in { opacity: 0; animation: fadeUp .6s ease forwards; }
+  .delay-1 { animation-delay: .1s; }
+  .delay-2 { animation-delay: .2s; }
+  .delay-3 { animation-delay: .3s; }
+
+  /* ─── Conversation animation ─────────────────────────── */
+  .chat-sim {
+    background: var(--code-bg); border-radius: var(--radius);
+    padding: 20px; margin: 24px 0;
+  }
+  .msg {
+    display: flex; gap: 10px; margin-bottom: 12px;
+    opacity: 0; transform: translateY(8px);
+    transition: opacity .5s, transform .5s;
+  }
+  .msg.visible { opacity: 1; transform: translateY(0); }
+  .msg-left { flex-direction: row; }
+  .msg-right { flex-direction: row-reverse; }
+  .msg-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--primary); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .9rem; font-weight: 700; flex-shrink: 0;
+  }
+  .msg-bubble {
+    max-width: 70%; padding: 10px 14px; border-radius: 16px;
+    font-size: .88rem; line-height: 1.5;
+  }
+  .msg-left  .msg-bubble { background: #2A3650; color: #EEFFFF; border-radius: 4px 16px 16px 16px; }
+  .msg-right .msg-bubble { background: var(--primary); color: #fff; border-radius: 16px 4px 16px 16px; }
+  .msg-name  { font-size: .72rem; color: var(--muted); margin-bottom: 4px; }
+  .chat-replay {
+    display: block; margin: 12px auto 0; background: none; border: 2px solid var(--accent);
+    color: var(--accent); border-radius: 99px; padding: 8px 20px; cursor: pointer;
+    font-size: .85rem; font-weight: 600; transition: background .15s, color .15s;
+  }
+  .chat-replay:hover { background: var(--accent); color: #fff; }
+
+  /* ─── Section intro banner ───────────────────────────── */
+  .section-banner {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--plight) 100%);
+    color: #fff; border-radius: var(--radius); padding: 28px 28px;
+    margin-bottom: 32px;
+  }
+  .section-banner .num {
+    font-size: .8rem; opacity: .7; letter-spacing: .1em; text-transform: uppercase;
+    font-weight: 600;
+  }
+  .section-banner h2 { color: #fff; margin-bottom: 8px; }
+  .section-banner p  { opacity: .85; font-size: .95rem; margin: 0; }
+
+  /* ─── Completion ─────────────────────────────────────── */
+  #completion {
+    text-align: center; padding: 80px 24px;
+  }
+  .trophy { font-size: 5rem; }
+  #completion h2 { font-size: 2.5rem; margin: 24px 0 12px; }
+  #completion p  { font-size: 1.1rem; color: var(--muted); max-width: 500px; margin: 0 auto; }
+
+  /* ─── Scrollspy ──────────────────────────────────────── */
+  /* handled in JS */
+</style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div id="progress-bar"><div id="progress-fill"></div></div>
+
+<!-- Nav -->
+<nav id="nav">
+  <span class="brand">🌐 Microverse</span>
+  <a href="#hero" data-nav="hero">Start</a>
+  <a href="#overview" data-nav="overview">Overview</a>
+  <a href="#characters" data-nav="characters">Characters</a>
+  <a href="#ai-brain" data-nav="ai-brain">AI Brain</a>
+  <a href="#conversation" data-nav="conversation">Dialogue</a>
+  <a href="#memory" data-nav="memory">Memory</a>
+  <a href="#api" data-nav="api">API Layer</a>
+  <a href="#save" data-nav="save">Save &amp; Settings</a>
+  <a href="#extending" data-nav="extending">Extending</a>
+  <a href="#quiz" data-nav="quiz">Quiz</a>
+</nav>
+
+<div class="page">
+
+<!-- ══════════════════════════════════════════ HERO ══ -->
+<section id="hero">
+  <div class="fade-in">
+    <div class="module-label">Interactive Code Course</div>
+    <h1>How Microverse Works</h1>
+    <p class="subtitle">A Godot 4 AI social simulation — 8 autonomous characters, live LLM conversations, and a memory system that never forgets. Let's trace the code together.</p>
+    <div class="badges">
+      <span class="badge">Godot 4 · GDScript</span>
+      <span class="badge">Multi-Agent AI</span>
+      <span class="badge">9 LLM Providers</span>
+      <span class="badge">Persistent Memory</span>
+      <span class="badge">MIT License</span>
+    </div>
+    <a href="#overview" class="start-btn">Start Learning →</a>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════ MODULE 1: OVERVIEW ══ -->
+<section id="overview">
+  <div class="section-banner fade-in">
+    <div class="num">Module 1</div>
+    <h2>The Big Picture</h2>
+    <p>Before diving into code, understand what Microverse does at a high level — and how all the pieces connect.</p>
+  </div>
+
+  <p>
+    Microverse is a <strong>sandbox AI social simulation game</strong> built with
+    <span class="gl" data-tip="Godot is a free, open-source game engine. Version 4 uses GDScript, a Python-like language built specifically for games.">Godot 4</span>.
+    Inspired by <a href="https://arxiv.org/abs/2304.03442" target="_blank" rel="noopener" style="color:var(--primary)">Stanford's AI Town paper</a>, it places 8 office characters in a virtual workplace where they
+    <em>think, talk, remember, and make decisions entirely on their own</em> — powered by real
+    <span class="gl" data-tip="Large Language Model — an AI system like GPT-4, Claude, or Gemini that can generate human-like text responses.">LLMs</span>.
+  </p>
+  <p>
+    As the player, you're a <strong>god</strong>. You watch the simulation unfold, intervene when you want, configure the AI brains, and save the world state whenever you like. Every conversation is real. Every memory persists.
+  </p>
+
+  <h3>System Architecture at a Glance</h3>
+  <div class="arch">
+<span class="node">project.godot</span>  ← entry point, declares autoloaded singletons
+<span class="arrow">│</span>
+<span class="arrow">├──</span> <span class="node">SettingsManager</span>  <span class="comment">← global + per-character API settings</span>
+<span class="arrow">├──</span> <span class="node">APIManager</span>       <span class="comment">← HTTP calls to LLM APIs</span>
+<span class="arrow">├──</span> <span class="node">DialogManager</span>    <span class="comment">← starts/ends conversations (T / L keys)</span>
+<span class="arrow">├──</span> <span class="node">CharacterManager</span> <span class="comment">← tracks which character the player controls</span>
+<span class="arrow">├──</span> <span class="node">MemoryManager</span>    <span class="comment">← stores + retrieves character memories</span>
+<span class="arrow">└──</span> <span class="node">GameSaveManager</span>  <span class="comment">← save / load world state to JSON</span>
+
+<span class="node">Office Scene</span>
+<span class="arrow">├──</span> <span class="node">8 Characters</span>
+<span class="arrow">│   └──</span> <span class="node">CharacterController</span>  <span class="comment">← movement, pathfinding, animation</span>
+<span class="arrow">│   └──</span> <span class="node">AIAgent</span>              <span class="comment">← autonomous decision-making</span>
+<span class="arrow">│   └──</span> <span class="node">ChatHistory</span>          <span class="comment">← per-character conversation log</span>
+<span class="arrow">├──</span> <span class="node">Furniture</span> (chairs, desks)
+<span class="arrow">├──</span> <span class="node">RoomAreas</span>    <span class="comment">← named zones characters are aware of</span>
+<span class="arrow">├──</span> <span class="node">CameraController</span>
+<span class="arrow">└──</span> <span class="node">GodUI</span>        <span class="comment">← god-mode control panel</span>
+  </div>
+
+  <h3>Key Flows in One Sentence Each</h3>
+  <div class="card">
+    <ul>
+      <li>⌨️ <strong>Player presses T</strong> → DialogManager → DialogService → ConversationManager → LLM API → speech bubble on screen</li>
+      <li>🤖 <strong>AI decision timer fires</strong> (every 60s) → AIAgent asks LLM "what should I do?" → moves, sits, or talks</li>
+      <li>🧠 <strong>After every conversation</strong> → DialogManager → MemoryManager stores a new memory for each participant</li>
+      <li>💾 <strong>Player presses F1</strong> → GameSaveManager serialises all character states to a JSON file</li>
+      <li>⚙️ <strong>Player changes API provider</strong> → SettingsManager persists choice → APIManager picks it up on next call</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════ MODULE 2: CHARACTERS ══ -->
+<section id="characters">
+  <div class="section-banner fade-in">
+    <div class="num">Module 2</div>
+    <h2>The 8 AI Characters</h2>
+    <p>Each character is a richly described personality that shapes every LLM prompt they generate.</p>
+  </div>
+
+  <p>Characters aren't just sprites. Each one has a <code>PERSONALITY_CONFIG</code> dictionary in <strong>CharacterPersonality.gd</strong> that defines their <em>job, personality, speaking style, work duties, and habits</em>. This config is injected into the AI prompt on every decision or conversation — so Alice always sounds like Alice.</p>
+
+  <div class="card-grid">
+    <div class="char-card">
+      <div class="char-avatar" style="background:#F3E5F5">👔</div>
+      <div class="char-name">Stephen</div>
+      <div class="char-role">CEO / Boss</div>
+      <div class="char-desc">Serial PUA practitioner who packages overtime as "youth investment plans". Keeps 100 fake Elon Musk selfies on his phone.</div>
+    </div>
+    <div class="char-card">
+      <div class="char-avatar" style="background:#E3F2FD">🎩</div>
+      <div class="char-name">Tom</div>
+      <div class="char-role">Executive Secretary</div>
+      <div class="char-desc">Human compliment machine. Can turn the boss's typos into "innovative expressions". Secretly sharp-tongued with peers.</div>
+    </div>
+    <div class="char-card">
+      <div class="char-avatar" style="background:#FCE4EC">🌸</div>
+      <div class="char-name">Lea</div>
+      <div class="char-role">Front Desk Receptionist</div>
+      <div class="char-desc">Social ceiling of the office. Maintains a mental "relationship graph" of every colleague. Knows Stephen's blood pressure pills are in drawer 3.</div>
+    </div>
+    <div class="char-card">
+      <div class="char-avatar" style="background:#E8F5E9">🎨</div>
+      <div class="char-name">Alice</div>
+      <div class="char-role">Frontend Engineer / UI</div>
+      <div class="char-desc">Thorny rose. Immune to unreasonable demands. Quotes Labour Law chapter 38 when pushed. Has pixel-art "reject overwork" stickers on her desk.</div>
+    </div>
+    <div class="char-card">
+      <div class="char-avatar" style="background:#FFF8E1">📊</div>
+      <div class="char-name">Grace</div>
+      <div class="char-role">HR Manager</div>
+      <div class="char-desc">Detail-obsessed. Schedules interviews by star sign. Switches from friend mode to lawyer mode when salary negotiations start.</div>
+    </div>
+    <div class="char-card">
+      <div class="char-avatar" style="background:#E3F2FD">💻</div>
+      <div class="char-name">Jack</div>
+      <div class="char-role">Backend Engineer</div>
+      <div class="char-desc">Cold exterior, passionate about code. OCD about variable naming. Quietly watches out for the team while wearing headphones.</div>
+    </div>
+    <div class="char-card">
+      <div class="char-avatar" style="background:#FFEBEE">🐛</div>
+      <div class="char-name">Joe</div>
+      <div class="char-role">QA Tester</div>
+      <div class="char-desc">Compulsive bug-finder with a sharp tongue. If a button is 1px off-centre, he filed the ticket before you blinked.</div>
+    </div>
+    <div class="char-card">
+      <div class="char-avatar" style="background:#F3E5F5">📋</div>
+      <div class="char-name">Monica</div>
+      <div class="char-role">Product Manager</div>
+      <div class="char-desc">Emotionally efficient. Allergic to missing data. Meetings always start on time. Usually ends them 2 minutes early.</div>
+    </div>
+  </div>
+
+  <h3>How Personality Becomes a Prompt</h3>
+  <div class="code-pair">
+    <div class="code-pane">
+      <pre><span class="cmt"># CharacterPersonality.gd</span>
+<span class="kw">const</span> <span class="cls">PERSONALITY_CONFIG</span> = {
+  <span class="str">"Alice"</span>: {
+    <span class="str">"position"</span>: <span class="str">"Frontend Engineer, UI Designer"</span>,
+    <span class="str">"personality"</span>: <span class="str">"Design's thorny rose..."</span>,
+    <span class="str">"speaking_style"</span>: <span class="str">"Opens with '...'..."</span>,
+    <span class="str">"work_duties"</span>:  <span class="str">"UI design, UX..."</span>,
+    <span class="str">"work_habits"</span>:  <span class="str">"Pixel-art stickers..."</span>
+  }
+}</pre>
+    </div>
+    <div class="plain-pane">
+      <h4>Plain English</h4>
+      <ul>
+        <li>This is a GDScript <strong>constant dictionary</strong> — think of it as a config object that never changes at runtime.</li>
+        <li>Each key is a character name; the value is a nested dictionary of traits.</li>
+        <li>When Alice speaks, the game calls <code>get_personality("Alice")</code> and pastes all 5 fields straight into the LLM prompt — so the AI model literally reads Alice's personality before generating her next line of dialogue.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout">
+    <span class="callout-icon">💡</span>
+    <strong>The insight:</strong> characters feel real not because of sophisticated AI, but because the prompt is rich. Personality + memory + current status = deeply contextualised LLM output.
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════ MODULE 3: AI BRAIN ══ -->
+<section id="ai-brain">
+  <div class="section-banner fade-in">
+    <div class="num">Module 3</div>
+    <h2>The AI Brain — Autonomous Decision Making</h2>
+    <p>Every character has an AIAgent that thinks for itself every 60 seconds.</p>
+  </div>
+
+  <p>
+    Each character node has an <strong>AIAgent</strong> child. It contains a
+    <span class="gl" data-tip="A state machine is a design pattern where an object can only be in one of a fixed number of states at any time. Transitions between states are triggered by events.">state machine</span>
+    with three states, and a
+    <span class="gl" data-tip="A Timer node in Godot fires a 'timeout' signal after a set number of seconds. Here it fires every 60 seconds to trigger AI decisions.">Timer</span>
+    that fires every 60 seconds.
+  </p>
+
+  <div class="state-machine">
+    <div class="state-node idle">
+      <div class="state-icon">😴</div>
+      IDLE
+    </div>
+    <div class="state-arrow">
+      <div class="arrow-line">→</div>
+      pathfind
+    </div>
+    <div class="state-node moving">
+      <div class="state-icon">🚶</div>
+      MOVING
+    </div>
+    <div class="state-arrow">
+      <div class="arrow-line">→</div>
+      reach target
+    </div>
+    <div class="state-node talking">
+      <div class="state-icon">💬</div>
+      TALKING
+    </div>
+    <div class="state-arrow">
+      <div class="arrow-line">→</div>
+      end convo
+    </div>
+    <div class="state-node idle">
+      <div class="state-icon">😴</div>
+      IDLE
+    </div>
+  </div>
+
+  <h3>The Decision Loop (Every 60 Seconds)</h3>
+  <div class="code-pair">
+    <div class="code-pane">
+      <pre><span class="kw">func</span> <span class="fn">make_decision</span>():
+  <span class="cmt"># Skip if already waiting for API</span>
+  <span class="kw">if</span> character.name <span class="kw">in</span> waiting_responses:
+    <span class="kw">return</span>
+
+  <span class="cmt"># Different logic if mid-conversation</span>
+  <span class="kw">if</span> dialog_manager.is_character_in_conversation(
+      character):
+    <span class="kw">await</span> make_conversation_decision()
+    <span class="kw">return</span>
+
+  <span class="cmt"># Build a rich context prompt</span>
+  <span class="kw">var</span> prompt = <span class="str">"You are %s, %s..."</span> % [
+    character.name,
+    personality[<span class="str">"position"</span>]
+  ]
+  prompt += scene_description
+  prompt += status_info
+  prompt += task_info
+  prompt += <span class="str">"\nChoose: 1=adjust tasks 2=continue"</span>
+
+  <span class="cmt"># Ask the LLM, parse reply</span>
+  <span class="kw">var</span> http = <span class="kw">await</span> api_manager.generate_dialog(
+    prompt, character.name)
+  http.request_completed.connect(
+    _on_decision_request_completed)</pre>
+    </div>
+    <div class="plain-pane">
+      <h4>Plain English</h4>
+      <ul>
+        <li><strong>Guard clauses first</strong> — if the AI is waiting for an API reply from last time, skip. No spamming.</li>
+        <li><strong>Different logic mid-conversation</strong> — characters can decide what to say next while already talking.</li>
+        <li><strong>Build a prompt</strong> — personality + scene description + mood/health/money + task list, all concatenated into one big string.</li>
+        <li><strong>Ask the LLM</strong> — the question is simple: "1 or 2?" (adjust tasks vs. continue current task). The AI picks based on full context.</li>
+        <li><strong>Callback on completion</strong> — Godot's <code>await</code> pauses the function until the HTTP request finishes, then <code>_on_decision_request_completed</code> handles the response.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>What "Autonomous" Actually Means</h3>
+  <div class="card">
+    <ul>
+      <li>🏃 <strong>Move</strong> — AIAgent calls <code>move_to_target()</code> → CharacterController pathfinds to a room or chair using Godot's <span class="gl" data-tip="Godot's built-in 2D pathfinding system. You define a NavigationRegion2D with a polygon, and NavigationAgent2D finds the shortest walkable path.">NavigationAgent2D</span></li>
+      <li>💬 <strong>Talk</strong> — AIAgent calls <code>dialog_manager._try_start_conversation()</code> → full LLM dialogue exchange (see Module 4)</li>
+      <li>🪑 <strong>Sit</strong> — AIAgent sends character to a chair; ChairController auto-sits on arrival and adjusts Z-depth for 2D sorting</li>
+      <li>😴 <strong>Idle</strong> — just waits for the next decision timer tick</li>
+    </ul>
+  </div>
+
+  <div class="callout green">
+    <span class="callout-icon">🎯</span>
+    <strong>Why 60 seconds?</strong> It's a balance — short enough to feel alive, long enough not to hammer the LLM API with constant requests (which costs money and slows down the game).
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════ MODULE 4: CONVERSATION ══ -->
+<section id="conversation">
+  <div class="section-banner fade-in">
+    <div class="num">Module 4</div>
+    <h2>The Conversation Engine</h2>
+    <p>From pressing T to seeing a speech bubble — a six-step journey through four different classes.</p>
+  </div>
+
+  <p>The dialogue system has four layers. Each layer has one job:</p>
+
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-connector">
+        <div class="flow-dot">1</div>
+        <div class="flow-line"></div>
+      </div>
+      <div class="flow-content">
+        <div class="flow-title">DialogManager (Singleton)</div>
+        <div class="flow-desc">Listens for the T key. Checks that the selected character is close enough to someone else (&lt; 100 px). Tells DialogService to start a conversation.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-connector">
+        <div class="flow-dot">2</div>
+        <div class="flow-line"></div>
+      </div>
+      <div class="flow-content">
+        <div class="flow-title">DialogService</div>
+        <div class="flow-desc">Maintains a dictionary of all active conversations. Prevents the same two characters from having two conversations at once. Creates a ConversationManager for this pair.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-connector">
+        <div class="flow-dot">3</div>
+        <div class="flow-line"></div>
+      </div>
+      <div class="flow-content">
+        <div class="flow-title">ConversationManager (RefCounted)</div>
+        <div class="flow-desc">The real engine. Builds the LLM prompt from personality + memory + status + recent history. Calls APIManager. Parses the response. Creates a speech bubble. Saves the exchange to ChatHistory. Then swaps speaker and listener for the reply.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-connector">
+        <div class="flow-dot">4</div>
+        <div class="flow-line"></div>
+      </div>
+      <div class="flow-content">
+        <div class="flow-title">APIManager (Singleton)</div>
+        <div class="flow-desc">Creates an HTTPRequest node on-the-fly, sets the right headers for the chosen provider (OpenAI / Ollama / Claude / …), fires the POST, returns the HTTPRequest node to the caller via await.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-connector">
+        <div class="flow-dot">5</div>
+        <div class="flow-line"></div>
+      </div>
+      <div class="flow-content">
+        <div class="flow-title">DialogBubble (UI Node)</div>
+        <div class="flow-desc">A NinePatchRect that auto-positions above the character's head. Shows text, follows the character in real time, fades out after 5 seconds.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-connector">
+        <div class="flow-dot">6</div>
+      </div>
+      <div class="flow-content">
+        <div class="flow-title">ChatHistory (Per-character Node)</div>
+        <div class="flow-desc">Appends the exchange to an in-memory array keyed by the other character's name. Auto-saves to <code>user://chat_history/Alice_history.json</code>. These are read back on the next conversation as "recent history".</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>How the Prompt Is Assembled</h3>
+  <div class="code-pair">
+    <div class="code-pane">
+      <pre><span class="kw">func</span> <span class="fn">build_dialog_prompt</span>(...) -> <span class="cls">String</span>:
+  <span class="kw">var</span> prompt = <span class="str">"You are %s, %s. "</span>
+              % [speaker.name, position]
+  prompt += <span class="str">"Your personality: %s. "</span> % personality
+  prompt += <span class="str">"Speaking style: %s."</span>   % style
+
+  <span class="cmt"># World context</span>
+  prompt += background_prompt      <span class="cmt"># company + rules</span>
+  prompt += company_basic_info     <span class="cmt"># name, desc</span>
+  prompt += company_info           <span class="cmt"># employee roster</span>
+
+  <span class="cmt"># Speaker's internal state</span>
+  prompt += speaker_status         <span class="cmt"># mood, health, $$$</span>
+  prompt += speaker_memories       <span class="cmt"># from MemoryManager</span>
+  prompt += speaker_tasks          <span class="cmt"># current task list</span>
+
+  <span class="cmt"># Listener's public info only</span>
+  prompt += <span class="str">"\nYou are talking to %s."</span> % listener.name
+  prompt += listener_basic_info    <span class="cmt"># NO memories exposed</span>
+
+  <span class="cmt"># Recent history (last 5 lines)</span>
+  prompt += chat_history
+
+  <span class="kw">return</span> prompt</pre>
+    </div>
+    <div class="plain-pane">
+      <h4>Plain English</h4>
+      <ul>
+        <li><strong>Six layers of context</strong> stacked in sequence — identity → world → internal state → memories → tasks → the person they're talking to → recent exchanges.</li>
+        <li><strong>Privacy model:</strong> the speaker gets their own full memories. The listener's memories are <em>never</em> revealed — just like real conversations where you can't read someone else's mind.</li>
+        <li><strong>Recent history (5 lines)</strong> prevents characters from starting every sentence fresh and forgetting what they just said.</li>
+        <li>All of this concatenates into <strong>one long string</strong> sent as the system prompt to the LLM.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Watch a Conversation Happen</h3>
+  <div class="chat-sim" id="chat-demo">
+    <div class="msg msg-left" id="msg1">
+      <div>
+        <div class="msg-avatar" style="background:#4A7C59">A</div>
+      </div>
+      <div>
+        <div class="msg-name">Alice → Jack</div>
+        <div class="msg-bubble">Jack, did you see the 'urgent' Figma comment Stephen left at 2am? He literally drew on my gradients with the Sharpie tool.</div>
+      </div>
+    </div>
+    <div class="msg msg-right" id="msg2">
+      <div>
+        <div class="msg-avatar" style="background:#2E5147">J</div>
+      </div>
+      <div>
+        <div class="msg-name">Jack → Alice</div>
+        <div class="msg-bubble">Saw it. The comment was 847 characters long and contained three typos. I closed the tab.</div>
+      </div>
+    </div>
+    <div class="msg msg-left" id="msg3">
+      <div>
+        <div class="msg-avatar" style="background:#4A7C59">A</div>
+      </div>
+      <div>
+        <div class="msg-name">Alice → Jack</div>
+        <div class="msg-bubble">Respect. I opened Labour Law chapter 38 on my second monitor and left it there all day.</div>
+      </div>
+    </div>
+    <button class="chat-replay" onclick="replayChat()">↺ Replay</button>
+  </div>
+
+  <div class="callout">
+    <span class="callout-icon">🔁</span>
+    <strong>Turn-taking:</strong> After each LLM response, ConversationManager swaps speaker and listener and calls <code>generate_dialog()</code> again. The conversation auto-continues until the L key is pressed or the characters walk out of range.
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════ MODULE 5: MEMORY ══ -->
+<section id="memory">
+  <div class="section-banner fade-in">
+    <div class="num">Module 5</div>
+    <h2>The Memory System</h2>
+    <p>Characters remember what happened — and those memories shape everything they say next.</p>
+  </div>
+
+  <p>
+    After every conversation ends, <strong>DialogManager</strong> adds a memory to each participant via <strong>MemoryManager</strong>.
+    Memories are stored as metadata on each character node, serialised to disk on save.
+  </p>
+
+  <h3>Five Types of Memory</h3>
+  <div class="memory-grid">
+    <div class="memory-card mem-personal">
+      <div class="mem-type">🧍 PERSONAL</div>
+      <div class="mem-example">"I prefer working late at night when the office is quiet."</div>
+    </div>
+    <div class="memory-card mem-interact">
+      <div class="mem-type">🤝 INTERACTION</div>
+      <div class="mem-example">"Alice complained about Stephen's Figma comment this morning."</div>
+    </div>
+    <div class="memory-card mem-task">
+      <div class="mem-type">📋 TASK</div>
+      <div class="mem-example">"Finished the login page redesign. Waiting for Jack's API."</div>
+    </div>
+    <div class="memory-card mem-emotion">
+      <div class="mem-type">❤️ EMOTION</div>
+      <div class="mem-example">"Felt frustrated after today's all-hands meeting."</div>
+    </div>
+    <div class="memory-card mem-event">
+      <div class="mem-type">📅 EVENT</div>
+      <div class="mem-example">"Company announced Q3 performance bonus was cut."</div>
+    </div>
+  </div>
+
+  <h3>Memory Importance Levels</h3>
+  <div class="importance-row">
+    <span class="imp-badge imp-low">LOW · 1 pt</span>
+    <span class="imp-badge imp-normal">NORMAL · 3 pts</span>
+    <span class="imp-badge imp-high">HIGH · 5 pts</span>
+    <span class="imp-badge imp-critical">CRITICAL · 10 pts</span>
+  </div>
+  <p>When building the prompt, memories are sorted by importance descending, then by recency. Old LOW memories get pruned first when the list grows too long.</p>
+
+  <h3>Adding a Memory in Code</h3>
+  <div class="code-pair">
+    <div class="code-pane">
+      <pre><span class="cmt"># MemoryManager.gd</span>
+<span class="kw">func</span> <span class="fn">add_memory</span>(
+    character: <span class="cls">Node</span>,
+    content:   <span class="cls">String</span>,
+    type:      <span class="cls">MemoryType</span> = PERSONAL,
+    importance:<span class="cls">MemoryImportance</span> = NORMAL
+) -> <span class="kw">void</span>:
+
+  <span class="kw">var</span> memory_obj = {
+    <span class="str">"content"</span>:    content,
+    <span class="str">"timestamp"</span>:  time_str,
+    <span class="str">"type"</span>:       type,
+    <span class="str">"importance"</span>: importance,
+    <span class="str">"created_at"</span>: Time.get_unix_time()
+  }
+
+  <span class="kw">var</span> data = character.get_meta(
+    <span class="str">"character_data"</span>, {})
+  data[<span class="str">"memories"</span>].append(memory_obj)
+  character.set_meta(<span class="str">"character_data"</span>, data)</pre>
+    </div>
+    <div class="plain-pane">
+      <h4>Plain English</h4>
+      <ul>
+        <li><strong>character.get_meta / set_meta</strong> — Godot lets you attach arbitrary data to any node using metadata. Here the entire character state (memories, mood, money…) lives in a dictionary called <code>character_data</code>.</li>
+        <li><strong>One function, four parameters</strong> — you only need to specify what you want to remember. Defaults handle everything else.</li>
+        <li><strong>Timestamp is automatic</strong> — the current system time is stored so the engine can sort memories by age later.</li>
+        <li>Memories <em>only</em> exist in RAM until <code>GameSaveManager.save_game()</code> writes them to disk.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout">
+    <span class="callout-icon">🔬</span>
+    <strong>Why this matters:</strong> Without memory, every conversation starts from scratch and feels hollow. With memory, Alice remembers that Jack ignored a critical bug for two days — and will bring it up the next time they talk, even if it was two play sessions ago.
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════ MODULE 6: API ══ -->
+<section id="api">
+  <div class="section-banner fade-in">
+    <div class="num">Module 6</div>
+    <h2>The API Abstraction Layer</h2>
+    <p>One codebase, nine AI providers. How? A provider registry pattern in APIConfig.gd.</p>
+  </div>
+
+  <p>
+    Every LLM has a different API format. OpenAI uses <code>/v1/chat/completions</code>. Ollama runs locally.
+    Gemini needs a Google API key in the URL itself. Claude wants a special <code>anthropic-version</code> header.
+    <strong>APIConfig</strong> abstracts all of this behind one uniform interface.
+  </p>
+
+  <h3>Supported Providers</h3>
+  <div class="provider-grid">
+    <div class="provider-card"><div class="provider-icon">🟢</div><div class="provider-name">Ollama</div><div class="provider-tag">Local · No key</div></div>
+    <div class="provider-card"><div class="provider-icon">⚫</div><div class="provider-name">OpenAI</div><div class="provider-tag">GPT-4o, 4o-mini</div></div>
+    <div class="provider-card"><div class="provider-icon">🔵</div><div class="provider-name">DeepSeek</div><div class="provider-tag">deepseek-chat</div></div>
+    <div class="provider-card"><div class="provider-icon">🟠</div><div class="provider-name">Doubao</div><div class="provider-tag">ByteDance</div></div>
+    <div class="provider-card"><div class="provider-icon">🔷</div><div class="provider-name">Gemini</div><div class="provider-tag">Google</div></div>
+    <div class="provider-card"><div class="provider-icon">🟣</div><div class="provider-name">Claude</div><div class="provider-tag">Anthropic</div></div>
+    <div class="provider-card"><div class="provider-icon">🟡</div><div class="provider-name">KIMI</div><div class="provider-tag">Moonshot AI</div></div>
+    <div class="provider-card"><div class="provider-icon">⚡</div><div class="provider-name">SiliconFlow</div><div class="provider-tag">Open models</div></div>
+    <div class="provider-card"><div class="provider-icon">🔌</div><div class="provider-name">Compatible</div><div class="provider-tag">Any OpenAI-compat</div></div>
+  </div>
+
+  <h3>The Provider Registry Pattern</h3>
+  <div class="code-pair">
+    <div class="code-pane">
+      <pre><span class="cmt"># APIConfig.gd — Provider Registry</span>
+<span class="kw">class</span> <span class="cls">APIProvider</span>:
+  <span class="kw">var</span> url:            <span class="cls">String</span>
+  <span class="kw">var</span> models:         <span class="cls">Array</span>[<span class="cls">String</span>]
+  <span class="kw">var</span> requires_key:   <span class="cls">bool</span>
+  <span class="kw">var</span> request_format: <span class="cls">String</span>  <span class="cmt"># openai/gemini/claude</span>
+  <span class="kw">var</span> response_parser:<span class="cls">String</span>
+
+<span class="kw">static var</span> _providers: <span class="cls">Dictionary</span> = {}
+
+<span class="kw">static func</span> <span class="fn">_initialize</span>():
+  _providers[<span class="str">"OpenAI"</span>] = <span class="cls">APIProvider</span>.new(
+    <span class="str">"OpenAI"</span>, <span class="str">"OpenAI"</span>,
+    <span class="str">"https://api.openai.com/v1/chat/completions"</span>,
+    [<span class="str">"gpt-4o-mini"</span>, <span class="str">"gpt-4o"</span>],
+    <span class="kw">true</span>,
+    {<span class="str">"Authorization"</span>: <span class="str">"Bearer {api_key}"</span>},
+    <span class="str">"openai"</span>, <span class="str">"openai"</span>
+  )</pre>
+    </div>
+    <div class="plain-pane">
+      <h4>Plain English</h4>
+      <ul>
+        <li><strong>APIProvider is a class</strong> that holds all config for one provider — URL, models, whether you need an API key, what request format to use, and how to parse the response.</li>
+        <li><strong>_providers dictionary</strong> maps provider names → APIProvider objects. Adding a new provider means adding one entry here.</li>
+        <li><strong>request_format</strong> tells <code>build_request_data()</code> which JSON shape to use. <code>"openai"</code> format works for OpenAI, DeepSeek, Doubao, KIMI, and SiliconFlow — they all copied OpenAI's API.</li>
+        <li><strong>static var</strong> — data lives on the class, not on instances. Only one copy exists. No need to create an APIConfig object.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Request-Response Lifecycle</h3>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-connector"><div class="flow-dot">1</div><div class="flow-line"></div></div>
+      <div class="flow-content">
+        <div class="flow-title">ConversationManager calls APIManager.generate_dialog(prompt)</div>
+        <div class="flow-desc">Passes the assembled prompt string.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-connector"><div class="flow-dot">2</div><div class="flow-line"></div></div>
+      <div class="flow-content">
+        <div class="flow-title">APIManager reads SettingsManager for current provider + model + key</div>
+        <div class="flow-desc">Supports per-character override (Alice can use GPT-4o while others use a local Ollama model).</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-connector"><div class="flow-dot">3</div><div class="flow-line"></div></div>
+      <div class="flow-content">
+        <div class="flow-title">APIConfig.build_request_data() formats the body</div>
+        <div class="flow-desc">Wraps the prompt in the correct JSON shape for the chosen provider.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-connector"><div class="flow-dot">4</div><div class="flow-line"></div></div>
+      <div class="flow-content">
+        <div class="flow-title">APIConfig.build_headers() adds auth headers</div>
+        <div class="flow-desc">Substitutes {api_key} placeholder with the real key.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-connector"><div class="flow-dot">5</div><div class="flow-line"></div></div>
+      <div class="flow-content">
+        <div class="flow-title">A new HTTPRequest node is created and fires the POST</div>
+        <div class="flow-desc">The node is auto-destroyed after the response arrives.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-connector"><div class="flow-dot">6</div></div>
+      <div class="flow-content">
+        <div class="flow-title">APIConfig.parse_response() extracts the text</div>
+        <div class="flow-desc">Different JSON paths for different providers (e.g., <code>choices[0].message.content</code> for OpenAI, <code>candidates[0].content.parts[0].text</code> for Gemini).</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout green">
+    <span class="callout-icon">🏗️</span>
+    <strong>Architecture lesson:</strong> The <em>Provider Registry Pattern</em> is the same pattern used in real production systems — one central config drives many different back-end implementations without changing the calling code. You've seen this in database drivers, payment processors, and OAuth providers.
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════ MODULE 7: SAVE ══ -->
+<section id="save">
+  <div class="section-banner fade-in">
+    <div class="num">Module 7</div>
+    <h2>Save, Settings &amp; Persistence</h2>
+    <p>How the world state survives between play sessions.</p>
+  </div>
+
+  <p>Microverse uses a flat-file persistence model: everything is <strong>JSON</strong> stored in Godot's user data directory (<code>user://</code>). No database, no server.</p>
+
+  <h3>Files Written to Disk</h3>
+  <div class="card">
+    <table style="width:100%; border-collapse:collapse; font-size:.9rem;">
+      <thead>
+        <tr style="border-bottom:2px solid var(--border)">
+          <th style="text-align:left;padding:10px 8px">File</th>
+          <th style="text-align:left;padding:10px 8px">Contains</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 8px;font-family:monospace;font-size:.82rem">user://saves/{name}.json</td>
+          <td style="padding:10px 8px">Full world snapshot: positions, facing direction, sitting state, AI states, tasks, settings</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 8px;font-family:monospace;font-size:.82rem">user://settings.cfg</td>
+          <td style="padding:10px 8px">Global API type, model, API key, window size, display mode</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 8px;font-family:monospace;font-size:.82rem">user://character_ai_settings.cfg</td>
+          <td style="padding:10px 8px">Per-character API overrides (Alice → GPT-4o, others → Ollama)</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 8px;font-family:monospace;font-size:.82rem">user://chat_history/*.json</td>
+          <td style="padding:10px 8px">Each character's conversation log, keyed by the other participant's name</td>
+        </tr>
+        <tr>
+          <td style="padding:10px 8px;font-family:monospace;font-size:.82rem">user://custom_social_rules.json</td>
+          <td style="padding:10px 8px">Custom rules added through BackgroundStoryManager (office, school, or jail presets)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Settings Signal Chain</h3>
+  <p>When you change the API provider in the settings UI, here's what happens:</p>
+  <div class="arch">
+<span class="node">GlobalSettingsUI</span>
+<span class="arrow">  │  user changes provider dropdown</span>
+<span class="arrow">  ↓</span>
+<span class="node">SettingsManager.save_settings()</span>
+<span class="arrow">  │  writes to user://settings.cfg</span>
+<span class="arrow">  │  emits settings_changed signal</span>
+<span class="arrow">  ↓</span>
+<span class="node">APIManager</span>  <span class="comment">← connected to settings_changed</span>
+<span class="arrow">  │  reads new api_type + model + key</span>
+<span class="arrow">  ↓</span>
+<span class="node">Next API call</span>  <span class="comment">← uses the new provider automatically</span>
+  </div>
+
+  <div class="callout">
+    <span class="callout-icon">📡</span>
+    <strong>Signals</strong> are Godot's built-in event system — like JavaScript's <code>addEventListener</code>. SettingsManager broadcasts one signal; every interested system subscribes. No tight coupling.
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════ MODULE 8: EXTENDING ══ -->
+<section id="extending">
+  <div class="section-banner fade-in">
+    <div class="num">Module 8</div>
+    <h2>Extending Microverse</h2>
+    <p>Three recipes for making the project your own.</p>
+  </div>
+
+  <h3>Recipe 1 — Add a New Character</h3>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-connector"><div class="flow-dot">1</div><div class="flow-line"></div></div>
+      <div class="flow-content">
+        <div class="flow-title">Create the scene</div>
+        <div class="flow-desc">Duplicate an existing character scene (e.g. Alice.tscn) in <code>scene/characters/</code>. Name it <code>Zara.tscn</code>.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-connector"><div class="flow-dot">2</div><div class="flow-line"></div></div>
+      <div class="flow-content">
+        <div class="flow-title">Add the personality config</div>
+        <div class="flow-desc">In <code>script/CharacterPersonality.gd</code>, add a new entry to <code>PERSONALITY_CONFIG</code> with <code>"Zara"</code> as the key. Fill in <code>position</code>, <code>personality</code>, <code>speaking_style</code>, <code>work_duties</code>, and <code>work_habits</code>.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-connector"><div class="flow-dot">3</div></div>
+      <div class="flow-content">
+        <div class="flow-title">Place in the scene</div>
+        <div class="flow-desc">Add Zara.tscn to the Office scene. Add the node to the <code>"character"</code> group so GameSaveManager picks her up automatically. She will immediately have AI decisions, memory, and dialogue.</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Recipe 2 — Add a New LLM Provider</h3>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-connector"><div class="flow-dot">1</div><div class="flow-line"></div></div>
+      <div class="flow-content">
+        <div class="flow-title">Add to _providers in APIConfig.gd</div>
+        <div class="flow-desc">Create a new <code>APIProvider.new()</code> entry. Set the URL, available models, whether a key is required, and which request/response format to use (<code>"openai"</code> works for most new providers).</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-connector"><div class="flow-dot">2</div><div class="flow-line"></div></div>
+      <div class="flow-content">
+        <div class="flow-title">Add to the APIType enum</div>
+        <div class="flow-desc">Append your provider name to the <code>enum APIType</code> at the top of APIConfig.gd.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-connector"><div class="flow-dot">3</div></div>
+      <div class="flow-content">
+        <div class="flow-title">Add to GlobalSettingsUI dropdown</div>
+        <div class="flow-desc">Add the provider name to the dropdown items in the settings UI scene. That's it — all routing is data-driven.</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Recipe 3 — Change the World (Background Story)</h3>
+  <p>
+    <strong>BackgroundStoryManager</strong> ships with three presets: <em>Office</em>, <em>School</em>, and <em>Jail</em>.
+    Each preset has 7–8 social rules that are injected into every single prompt.
+    You can add custom rules at runtime:
+  </p>
+  <div class="code-pair">
+    <div class="code-pane">
+      <pre><span class="cmt"># In GodUI or via console</span>
+<span class="cls">BackgroundStoryManager</span>.add_custom_rule(
+  <span class="str">"No one may eat lunch at their desk."</span>
+)
+
+<span class="cmt"># The next conversation prompt will include:</span>
+<span class="cmt"># "Social rule: No one may eat lunch at their desk."</span></pre>
+    </div>
+    <div class="plain-pane">
+      <h4>Plain English</h4>
+      <ul>
+        <li>One function call changes <em>every character's future behaviour</em> because the rule is injected into every LLM prompt from this moment forward.</li>
+        <li>Rules are saved to <code>user://custom_social_rules.json</code> so they persist across sessions.</li>
+        <li>Want to build a <em>Succession</em> scenario? Change the background story to a family company and add rules about inheritance. No code change needed — pure prompt engineering.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════ QUIZ ══ -->
+<section id="quiz">
+  <div class="section-banner fade-in">
+    <div class="num">Final Quiz</div>
+    <h2>Test Your Understanding</h2>
+    <p>Four scenario questions. No memorisation — only application.</p>
+  </div>
+
+  <div id="quiz-container">
+    <!-- Questions injected by JS -->
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════ COMPLETION ══ -->
+<section id="completion" style="display:none">
+  <div class="trophy">🏆</div>
+  <h2>Course Complete!</h2>
+  <p>You now understand how Microverse works end-to-end — from a keypress to an LLM response and back into a speech bubble.</p>
+  <div class="badges" style="justify-content:center;margin-top:32px">
+    <span class="badge">✅ Architecture</span>
+    <span class="badge">✅ AI Decision Loop</span>
+    <span class="badge">✅ Conversation Engine</span>
+    <span class="badge">✅ Memory System</span>
+    <span class="badge">✅ API Abstraction</span>
+    <span class="badge">✅ Persistence</span>
+  </div>
+  <div style="margin-top:40px">
+    <a href="https://github.com/midikang/Microverse" target="_blank" class="start-btn">View Source on GitHub →</a>
+  </div>
+</section>
+
+</div><!-- .page -->
+
+<script>
+// ─── Progress Bar ─────────────────────────────────────
+window.addEventListener('scroll', () => {
+  const doc = document.documentElement;
+  const scrolled = doc.scrollTop;
+  const max = doc.scrollHeight - doc.clientHeight;
+  const pct = max > 0 ? (scrolled / max) * 100 : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+});
+
+// ─── Scrollspy ────────────────────────────────────────
+const sections = ['hero','overview','characters','ai-brain','conversation','memory','api','save','extending','quiz'];
+function updateNav() {
+  const scrollY = window.scrollY + 120;
+  let active = sections[0];
+  for (const id of sections) {
+    const el = document.getElementById(id);
+    if (el && el.offsetTop <= scrollY) active = id;
+  }
+  document.querySelectorAll('#nav a').forEach(a => {
+    a.classList.toggle('active', a.dataset.nav === active);
+  });
+}
+window.addEventListener('scroll', updateNav);
+updateNav();
+
+// ─── Chat demo ────────────────────────────────────────
+function replayChat() {
+  const msgs = document.querySelectorAll('#chat-demo .msg');
+  msgs.forEach(m => m.classList.remove('visible'));
+  msgs.forEach((m, i) => setTimeout(() => m.classList.add('visible'), 300 + i * 700));
+}
+document.addEventListener('DOMContentLoaded', () => setTimeout(replayChat, 400));
+
+// ─── Quiz ─────────────────────────────────────────────
+const quizData = [
+  {
+    q: "A player reports that Alice never remembers conversations they had last week, even after loading a saved game. You suspect the bug is in persistence. Which two files would you check first?",
+    opts: [
+      "APIConfig.gd and APIManager.gd",
+      "GameSaveManager.gd and ChatHistory.gd",
+      "DialogManager.gd and ConversationManager.gd",
+      "MemoryManager.gd and SettingsManager.gd"
+    ],
+    correct: 1,
+    feedback: "Correct! ChatHistory saves conversation logs to user://chat_history/, and GameSaveManager serialises the full world state (including memories stored as character_data metadata). If either is broken, memories won't survive a reload."
+  },
+  {
+    q: "You want to add a new LLM provider called 'MistralAI' whose API format is identical to OpenAI's. What is the minimum change needed to make it appear in the settings dropdown and work correctly?",
+    opts: [
+      "Create a new GDScript class MistralAPIManager that extends APIManager",
+      "Add one entry to _providers in APIConfig.gd, add to the APIType enum, and add it to the UI dropdown",
+      "Modify ConversationManager to add a new if-branch for Mistral",
+      "Fork the entire APIManager class and replace all provider references"
+    ],
+    correct: 1,
+    feedback: "Correct! The provider registry pattern means a single dictionary entry in APIConfig drives all routing. Because Mistral uses OpenAI format, you set request_format: 'openai' and response_parser: 'openai'. No other code changes needed."
+  },
+  {
+    q: "Jack's AIAgent keeps spamming the API with requests even though it already received a response. What is the intended guard for this?",
+    opts: [
+      "The decision timer is set to one_shot = true so it only fires once",
+      "DialogManager.is_character_in_conversation() blocks all API calls",
+      "make_decision() returns early if the character's name is in the waiting_responses dictionary",
+      "APIManager automatically queues requests and processes them one at a time"
+    ],
+    correct: 2,
+    feedback: "Correct! At the very start of make_decision(), there's a guard: 'if character.name in waiting_responses and waiting_responses[character.name]: return'. This prevents overlapping requests while an API call is still pending."
+  },
+  {
+    q: "You want Monica (a Product Manager) to suddenly start refusing to attend any meeting with Stephen. What is the most architecturally correct way to implement this without writing any GDScript?",
+    opts: [
+      "Modify Monica's PERSONALITY_CONFIG.work_habits string to mention she avoids Stephen",
+      "Edit DialogManager.gd to add an if-check for the Monica-Stephen pair",
+      "Use BackgroundStoryManager.add_custom_rule() with a rule like 'Monica refuses all meetings with Stephen'",
+      "Change Monica's perception radius to 0 so she never detects Stephen"
+    ],
+    correct: 2,
+    feedback: "Correct! Custom social rules are injected into every Monica prompt. Since the LLM reads her personality AND the social rules before generating a decision, she will naturally refuse to engage with Stephen — no code changes required. This is pure prompt engineering."
+  }
+];
+
+let currentQ = 0;
+let score = 0;
+let answered = false;
+
+function renderQuiz() {
+  const container = document.getElementById('quiz-container');
+  if (currentQ >= quizData.length) {
+    container.innerHTML = '';
+    document.getElementById('completion').style.display = 'block';
+    document.getElementById('completion').scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+  const q = quizData[currentQ];
+  const pct = Math.round((currentQ / quizData.length) * 100);
+  container.innerHTML = `
+    <div class="quiz-section" id="active-quiz">
+      <div class="quiz-counter">Question ${currentQ + 1} of ${quizData.length} &nbsp;·&nbsp; Score: ${score}/${currentQ}</div>
+      <div class="quiz-q">${q.q}</div>
+      <div class="quiz-options">
+        ${q.opts.map((o, i) => `<button class="quiz-opt" data-idx="${i}" onclick="selectAnswer(${i})">${o}</button>`).join('')}
+      </div>
+      <div class="quiz-feedback" id="qfb"></div>
+      <button class="quiz-next" id="qnext" onclick="nextQuestion()">Next Question →</button>
+    </div>`;
+  answered = false;
+}
+
+function selectAnswer(idx) {
+  if (answered) return;
+  answered = true;
+  const q = quizData[currentQ];
+  const opts = document.querySelectorAll('.quiz-opt');
+  opts.forEach((opt, i) => {
+    opt.style.pointerEvents = 'none';
+    if (i === q.correct) opt.classList.add('correct');
+    else if (i === idx && idx !== q.correct) opt.classList.add('wrong');
+  });
+  const fb = document.getElementById('qfb');
+  fb.classList.add('show');
+  if (idx === q.correct) {
+    score++;
+    fb.classList.add('ok');
+    fb.innerHTML = '✅ ' + q.feedback;
+  } else {
+    fb.classList.add('bad');
+    fb.innerHTML = '❌ ' + q.feedback;
+  }
+  const nextBtn = document.getElementById('qnext');
+  nextBtn.classList.add('show');
+  nextBtn.textContent = currentQ < quizData.length - 1 ? 'Next Question →' : 'See Results →';
+}
+
+function nextQuestion() {
+  currentQ++;
+  renderQuiz();
+}
+
+document.addEventListener('DOMContentLoaded', renderQuiz);
+
+// ─── Intersection Observer for fade-in ───────────────
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
